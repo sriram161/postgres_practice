@@ -32,6 +32,9 @@ where
 select
    overlay('abcdefghijkl' placing 'CDEF' from 3 for 4);
 
+-- If the for value is large that that string will be repalced with low characters.
+select overlay('SriRamSagar' placing 'Rama' from 3 for 10);
+select overlay('SriRamSagar' placing 'Rama' from 3 for 1);
 
 /* Change Assistant to Asst in job title */
 select
