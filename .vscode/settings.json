@@ -9,6 +9,16 @@
             "port": 5432,
             "server": "localhost",
             "username": "test"
+        },
+        {
+            "connectionTimeout": 30,
+            "database": "exercises",
+            "dialect": "PostgreSQL",
+            "name": "pgexercises",
+            "password": "123456",
+            "port": 5432,
+            "server": "localhost",
+            "username": "test"
         }
     ]
 }
