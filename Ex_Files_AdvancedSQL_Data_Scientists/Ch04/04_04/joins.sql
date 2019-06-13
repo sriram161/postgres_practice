@@ -23,6 +23,12 @@ join
 on
    s.department = cd.department;
 
+-- Write above query using subquery.
+select s.last_name, s.department, 
+     (select cd.company_division from company_divisions cd
+     where s.department = cd.department) company_division
+from staff s
+
 /* The previous query did not return 1,000 rows. What rows are missing? */
 select distinct
    department
@@ -69,7 +75,7 @@ on
 
 /* ... now wiht alias, and there is no error */
 select
-  s.last_name, s.department, cd.company_division, cr.company_region
+  s.last_name, s.department, cd.company_division, cr.company_regions
 from
    staff s
 join
