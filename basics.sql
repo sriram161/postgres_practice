@@ -126,3 +126,52 @@ select a.firstname as memfname, a.surname as memsname, b.firstname as recfname, 
 on
 a.recommendedby = b.memid
 order by a.surname, a.firstname
+
+
+--Produce a list who have used tennis court
+select distinct a.firstname || ' ' || a.surname  as member, c.facname as facility from members as a join (select f.name as facname, b.memid
+from facilities as f
+join bookings as b
+on f.facid = b.facid
+where f.name similar to 'Tennis %') c
+on c.memid = a.memid
+order by a.firstname || ' ' || a.surname
+
+-- Produce list of bookings on 2012-09-14 cost per member more than 30$ 
+SELECT f.name, m.firstname || ' ' || m.surname as memname, 
+SUM(CASE WHEN m.firstname = 'GUEST' THEN f.guestcost
+         ELSE f.membercost
+    END) AS cost
+FROM bookings AS b
+JOIN facilities AS f
+ON f.facid = b.facid AND DATE(b.starttime) = DATE('2012-09-14')
+JOIN  members AS m
+ON m.memid = b.memid 
+GROUP BY m.firstname || ' ' || m.surname, f.name,
+
+-- Solution
+SELECT m.firstname || ' ' || m.surname, f.name, 
+CASE WHEN m.memid = 0 THEN b.slots*f.guestcost
+ELSE b.slots*f.membercost
+END AS cost
+FROM members AS m
+JOIN bookings AS b
+ON m.memid = b.memid
+JOIN facilities AS f
+ON f.facid = b.facid
+WHERE DATE(b.starttime) = DATE('2012-09-14') AND
+(b.slots* f.guestcost > 30 OR b.slots*membercost > 30)
+ORDER BY COST DESC
+
+-- Test
+select memid,b.facid, b.slots, b.starttime from bookings as b join facilities as f on f.facid = b.facid
+where
+  DATE(b.starttime) = DATE('2012-09-14')
+order by memid, b.facid
+
+
+-- pRINT ALL member names and recommender names.
+SELECT DISTINCT (m.firstname || ' ' || m.surname) as member, 
+(SELECT a.firstname || ' ' || a.surname FROM members AS a
+WHERE a.memid = m.recommendedby) as recommender
+FROM members AS m
