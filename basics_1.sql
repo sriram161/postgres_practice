@@ -56,4 +56,26 @@ where date (b.starttime) = date('2012-09-14')) as a
 where a.cost >= 35
 order by a.cost desc
 
--- NOTE: Subqueries can only return on column!!!!
+-- NOTE: Subqueries can only return on column!!
+
+-- create table from the members table.
+create table temp as (select * from  members);
+drop table temp
+drop table memberstemp
+
+create table memberstemp as (select * from  members);
+explain delete from memberstemp
+
+select count(*) from memberstemp;
+explain delete from memberstemp
+
+
+select * from memberstemp  as a  
+join bookings as b 
+on a.memid = b.memid
+
+
+-- Delete set of id which are not present another table.
+delete from memberstemp where memid not it (select memid from bookings)
+
+ 
