@@ -156,3 +156,16 @@ with t1 as (select f.name, case when b.memid=0 then b.slots*f.guestcost else b.s
      t3 as (select name, rank() over (order by revenue desc) as rank from t2)
 select * from t3
 where rank < 4
+
+-- classify facilities into 3 equally sized groups based on their revenue.
+with t1 as (select f.name, case when b.memid = 0 then b.slots*f.guestcost else b.slots*f.membercost end as revenue 
+  from facilities as f 
+  join bookings as b
+  on f.facid = b.facid),
+  t2 as (select name, sum(revenue) as revenue from t1 group by name),
+  t3 as (select name, rank() over (order by revenue desc) as rank, revenue from t2),
+  t4 as (select name, ntile(3) over (order by revenue desc) as class from t3),
+  t5 as (select * from t4 order by class, name)
+select name, case when class=1 then 'high'
+                  when class=2 then 'average'
+                  when class=3 then 'low' end from t5
