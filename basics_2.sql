@@ -143,12 +143,16 @@ a.memid = b.memid
 order by rank, surname, firstname
 
 -- Top 3 revenue generation facilities including ties output facility name and rank sorted by rank and facility. 
-with t1 as (select facid, sum(slots) over (partition by facid) as total_slots
-             from bookings),
-     t2 as (select 
-     )
-
-select b.name, case when t.memid from t1 as a
-join facilities as b
-on a.facid = b.facid
+with t1 as (select f.name, case when b.memid=0 then b.slots*f.guestcost else b.slots*f.membercost end as revenue
+            from bookings as b join facilities as f on f.facid = b.facid),
+     t2 as (select name, sum(revenue) as revenue from t1 group by name)
+select name, rank() over (order by revenue desc) as rank from t2
 fetch first 3 rows only
+
+-- Above query using rank.
+with t1 as (select f.name, case when b.memid=0 then b.slots*f.guestcost else b.slots*f.membercost end as revenue
+            from bookings as b join facilities as f on f.facid = b.facid),
+     t2 as (select name, sum(revenue) as revenue from t1 group by name),
+     t3 as (select name, rank() over (order by revenue desc) as rank from t2)
+select * from t3
+where rank < 4
