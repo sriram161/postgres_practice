@@ -86,5 +86,69 @@ group by f.facid, f.name
 order by f.facid
 
 -- Each members first booking afer september 1st 2019 and member name and order by memid.
-select distinct memid, starttime, first_value(starttime) over (partition by memid order by starttime) from bookings
-where date(starttime) >= DATE('2012-09-01')
+select distinct m.surname, m.firstname, a.memid, a.first_val as starttime from
+(select memid, starttime as starttime1, first_value(starttime) over (partition by memid order by starttime) as first_val 
+from (select * from bookings where date(starttime) >= date('2012-09-01'))as x ) as a
+inner join members as m
+on m.memid = a.memid
+order by a.memid
+
+
+-- Produce list of member names with each row containing total member count order by joindate
+select (select count(*) from members) as count, surname, firstname from members
+order by joindate
+
+select count(*) over(), firstname, surname from members
+order by joindate
+
+
+/* Window functions help you work on particular section of the data which makes them very powerful*/
+select
+  count(*) over(
+    partition by date_trunc('month', joindate)
+    order by
+      joindate asc
+  ) as asc_,
+  count(*) over(
+    partition by date_trunc('month', joindate)
+    order by
+      joindate desc
+  ) as desc_,
+  firstname,
+  surname
+from
+  members
+order by
+  joindate
+
+  -- number the members based on joining date.
+select row_number() over(), firstname, surname from members
+order by joindate
+
+-- Output the facility that has the highest number of slots ensure all ties are outputed.
+select distinct facid, sum(slots) over (partition by facid)
+from cd.bookings
+order by sum desc
+fetch first row only
+
+--prduce list of members along with the number of hours they booked in facilities, rounded to the nearest ten hours.
+--rank them by this rounded figure  output: firstname, surname, rounded hours, rank.
+-- sort by rank, surname and firstname.
+
+select b.firstname, b.surname, a.hours_, rank() over (order by hours_ desc) as rank from 
+(select distinct memid, round(sum(slots) over (partition by memid)/2, -1) as hours_ from bookings) as a
+join members as b
+on
+a.memid = b.memid 
+order by rank, surname, firstname
+
+-- Top 3 revenue generation facilities including ties output facility name and rank sorted by rank and facility. 
+with t1 as (select facid, sum(slots) over (partition by facid) as total_slots
+             from bookings),
+     t2 as (select 
+     )
+
+select b.name, case when t.memid from t1 as a
+join facilities as b
+on a.facid = b.facid
+fetch first 3 rows only
