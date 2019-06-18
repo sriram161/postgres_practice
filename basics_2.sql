@@ -169,3 +169,57 @@ with t1 as (select f.name, case when b.memid = 0 then b.slots*f.guestcost else b
 select name, case when class=1 then 'high'
                   when class=2 then 'average'
                   when class=3 then 'low' end from t5
+
+-- Calculate the payback time for each facility. 
+select count(distinct
+  date_part('month', starttime)) as month_count, count(distinct date_part('year', starttime)) as year_count
+from
+  bookings;
+
+--Actual query
+-- TODO: Compute monthly revenue - monthlymaintenance.
+-- TODO: Compute initialoutlay/ (monthly_revenue - monthlymaintenance)
+
+with t1 as ( select * from bookings as b join facilities as f on f.facid = b.facid),
+     t2 as ( select name, date_part('month', starttime) as month, sum(case when memid = 0 then slots*guestcost else slots*membercost end) as revenue, 
+            monthlymaintenance, initialoutlay from t1
+            group by name, month, monthlymaintenance, initialoutlay ),
+    t3 as (select name, initialoutlay, sum(revenue - monthlymaintenance) as income from t2
+           group by name, initialoutlay),
+    t4 as (select name, initialoutlay/income as months from t3)
+select * from t4
+order by name
+
+
+select
+  facs.name as name,
+  facs.initialoutlay /(
+    (
+      sum(
+        case
+          when memid = 0 then slots * facs.guestcost
+          else slots * membercost
+        end
+      ) / 3
+    ) - facs.monthlymaintenance
+  ) as months
+from
+  cd.bookings bks
+  inner join cd.facilities facs on bks.facid = facs.facid
+group by
+  facs.facid
+order by
+  name;
+
+
+-- rolling average of total revenue.
+with t1 as (select b.facid, b.memid, to_char(b.starttime, 'YYYY-MM-DD') as date, b.slots from bookings as b),
+     t2 as (select facid, memid, date, sum(slots) as slots from t1
+            group by facid, memid, date having date >= '2012-08-01' and date <= '2012-08-31'),
+     t3 as (select date, (case when t.memid = 0 then t.slots*f.guestcost
+            else t.slots*membercost end) as revenue from t2 as t join facilities as f
+            on t.facid = f.facid),
+     t4 as (select date, sum(revenue) as revenue from t3
+            group by date order by date)
+     t5 as (select date, lead(revenue) over())
+select * from t4;
