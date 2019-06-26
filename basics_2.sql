@@ -223,3 +223,28 @@ with t1 as (select b.facid, b.memid, to_char(b.starttime, 'YYYY-MM-DD') as date,
             group by date order by date)
      t5 as (select date, lead(revenue) over())
 select * from t4;
+
+
+-- Moving average version 2.
+select e.date, avg(e.revenue) over (order by e.date asc rows 14 preceding)
+from 
+    (select c.date, c.revenue 
+    from 
+        (select to_char(b.starttime, 'YYYY-MM-DD') as date,
+         case when b.memid = 0 then b.slots * f.guestcost
+         else b.slots * f.membercost end as revenue
+         from bookings as b
+         inner join facilities as f
+         on b.facid = f.facid) as c 
+    where c.date >= '2012-08-01' and c.date <= '2012-08-31') as e
+
+
+-- Moving Average 3 CORRECT answer for moving average
+with t1 as (select date(b.starttime) as date, case when b.memid = 0 then b.slots * f.guestcost
+           else b.slots * f.membercost end as revenue from bookings as b
+           inner join facilities as f 
+           on b.facid = f.facid),
+     t2 as (select date, sum(revenue) as revenue from t1 group by date),
+     t3 as (select date, avg(revenue) over (order by date asc rows 14 preceding) as revenue from t2),
+     t4 as (select date, revenue from t3 where date >= '2012-08-01' and date <= '2012-08-31') 
+select * from t4
