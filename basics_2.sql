@@ -245,6 +245,6 @@ with t1 as (select date(b.starttime) as date, case when b.memid = 0 then b.slots
            inner join facilities as f 
            on b.facid = f.facid),
      t2 as (select date, sum(revenue) as revenue from t1 group by date),
-     t3 as (select date, avg(revenue) over (order by date asc rows 14 preceding) as revenue from t2),
+     t3 as (select date, avg(revenue) over (order by date asc rows 10 preceding) as revenue from t2),
      t4 as (select date, revenue from t3 where date >= '2012-08-01' and date <= '2012-08-31') 
-select * from t4
+select * from t3
